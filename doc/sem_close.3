@@ -1,0 +1,45 @@
+.TH sem_close 3 "22 de noviembre de 2006" "Versión 1.0" "Minix programmer's manual"
+
+.SH NAME
+
+.B sem_close
+\- Cierra un semáforo
+
+.SH SYNOPSIS
+.B #include <semaphore.h>
+
+.B int sem_close(sem_t *sem);
+
+.SH DESCRIPTION
+La función sem_close cierra el semáforo pasado por parámetro
+
+.SH SEE ALSO
+.B sem_init
+(3), 
+.B sem_wait
+(3), 
+.B sem_post
+(3), 
+.B sem_getvalue
+(3), 
+.B sem_trywait
+(3), 
+.B sem_destroy
+(3),
+.B sem_open
+(3), 
+.B sem_close
+(3), 
+.B sem_inlink
+(3)
+
+.SH BUGS
+Por ahora ninguno, para reportarlos envíe un e-mail con el asunto "BUG en semaphore" a cualquiera de las siguientes direcciones:
+
+mbesio@alu.itba.edu.ar
+
+pagarcia@alu.itba.edu.ar
+
+hrajcher@alu.itba.edu.ar
+
+
