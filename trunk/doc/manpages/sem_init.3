@@ -1,0 +1,47 @@
+.TH sem_init 3 "22 de Noviembre de 2006" "Versión 1.0" "Minix programmer's manual"
+
+.SH NOMBRE
+
+.B sem_init
+\- inicializar un semáforo no nombrado
+
+.SH SINOPSIS
+.B #include <semaphore.h>
+
+.B int sem_init(sem_t *sem, int pshared, unsigned value);
+
+.SH DESCRIPCION
+La función sem_init inicializa el semáforo sin nombre referido por sem, utilizando como valor inicial value. Luego de una exitosa invocación de sem_init, el semáforo podrá ser utilizado en subsiguientes llamadas a sem_wait, sem_trywait, sem_post y sem_destroy. 
+
+Si el argumento pshared tiene un valor que no sea cero, el semáforo será compartido entre procesos. En este caso, cualquier proceso que pueda acceder al semáforo sem podrá utilizarlo para realizar las operaciones antes mencionadas. Sólo sem podrá ser utilizado para realizar las operaciones de sincronización. El resultado de referir a copias de sem en llamadas a esas funciones es indefinido.
+
+Si el argumento pshared es cero, el semáforo será compartido entre hilos del proceso, los que podrán efectuar cualquiera de las operaciones que figuran más arriba.
+
+El intentar inicializar un semáforo ya inicializado resulta en un comportamiento no definido.
+
+.SH VALOR DE RETORNO
+En una ejecución exitosa se devolverá el valor cero. En caso de error se devolverá -1 y la variable errno será actualizada para indicarlo.
+
+.SH CONFORME A
+POSIX.
+
+.SH VER TAMBIÉN
+.B sem_close
+(3),
+.B sem_destroy
+(3),
+.B sem_getvalue
+(3), 
+.B sem_open
+(3), 
+.B sem_post
+(3), 
+.B sem_timedwait
+(3), 
+.B sem_trywait
+(3), 
+.B sem_unlink
+(3),
+.B sem_wait
+(3) 
+

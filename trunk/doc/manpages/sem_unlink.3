@@ -1,0 +1,41 @@
+.TH sem_unlink 3 "22 de Noviembre de 2006" "Versión 1.0" "Minix programmer's manual"
+
+.SH NOMBRE
+
+.B sem_unlink
+\- remover un semáforo nombrado
+
+.SH SINOPSIS
+.B #include <semaphore.h>
+
+.B int sem_unlink(const char *name);
+
+.SH DESCRIPCION
+La función sem_unlink removerá el semáforo correspondiente al nombre name. Si el semáforo está actualmente referenciado por otro proceso, sem_unlink marcará el semáforo para posponer su destrucción hasta que todas las referencias al mismo hayan sido destruidas (sem_close). Las llamadas a sem_open para re-crear o re-conectarse al semáforo se referirán a un nuevo semáforo luego de que sem_unlink haya sido llamada.
+
+.SH VALOR DE RETORNO
+En una ejecución exitosa se devolverá el valor cero. En caso de error el semáforo no se modificará, se devolverá -1 y la variable errno será actualizada para indicarlo.
+
+.SH CONFORME A
+POSIX.
+
+.SH VER TAMBIÉN
+.B sem_close
+(3),
+.B sem_destroy
+(3),
+.B sem_getvalue
+(3), 
+.B sem_init
+(3), 
+.B sem_open
+(3), 
+.B sem_post
+(3), 
+.B sem_timedwait
+(3), 
+.B sem_trywait
+(3), 
+.B sem_wait
+(3) 
+

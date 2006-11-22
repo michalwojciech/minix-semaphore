@@ -1,0 +1,43 @@
+.TH sem_getvalue 3 "22 de Noviembre de 2006" "Versión 1.0" "Minix programmer's manual"
+
+.SH NOMBRE
+
+.B sem_getvalue
+\- obtener el valor de un semaforo
+
+.SH SINOPSIS
+.B #include <semaphore.h>
+
+.B int sem_getvalue(sem_t *sem, int *sval);
+
+.SH DESCRIPCION
+La función sem_getvalue() actualizará el contenido apuntado por sval para tener el valor del semáforo referenciado por sem sin afectar el estado del mismo. El valor representa el valor actual del semáforo presente en algún momento no especificado durante la llamada, y no necesariamente el valor actual del semáforo al producirse la devolución del valor al proceso que invoca.
+
+Si sem está bloqueado, sval apuntará a un número negativo cuyo módulo indicará el número de procesos esperando al semáforo en un momento no especificado durante la llamada.
+
+.SH CONFORME A
+POSIX.
+
+.SH VALOR DE RETORNO
+En una ejecución exitosa se devolverá el valor cero. En caso de error se devolverá -1 y la variable errno será actualizada para indicarlo.
+
+.SH VER TAMBIÉN
+.B sem_close
+(3),
+.B sem_destroy
+(3),
+.B sem_init
+(3), 
+.B sem_open
+(3), 
+.B sem_post
+(3), 
+.B sem_timedwait
+(3), 
+.B sem_trywait
+(3), 
+.B sem_unlink
+(3),
+.B sem_wait
+(3) 
+

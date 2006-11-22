@@ -1,0 +1,199 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage[spanish]{babel}
+\selectlanguage{spanish}
+\usepackage{fancyhdr}
+\usepackage[dvips]{graphicx}
+\usepackage[normal]{caption2}
+\usepackage{amsfonts,amssymb,amsmath,amsthm}
+\usepackage{moreverb}
+\usepackage[T1]{fontenc}
+\pagestyle{fancy}
+
+\lhead{ITBA}
+\chead{}
+\rhead{Sistemas Operativos}
+\cfoot{\thepage}
+\renewcommand{\footrulewidth}{0.4pt}
+\newcommand{\expon}[1]{~10^{#1}}
+\newcommand{\dif}[1]{\mathrm{d}#1}
+
+% \\			Line break
+% \today		Fecha del sistema
+% \label{}		Etiqueta
+% \ref{}		Referencia a la etiqueta del mismo nombre (a la sección)
+% \footnote{}		Nota al pie de la página
+% \underline{}		Subrayado
+% \emph{}		Cursiva
+% \textbf{}		Negrita
+% \begin{}		Comienza el entorno entre corchetes
+% \end{}		Termina el entrorno entre corchetes
+% \thepage		Número de página
+% \section{}		Sección
+% \subsection{}		Subsección
+% \subsubsection{}	Subsubsección
+% \frac{a}{b}		Fracción (a sobre b)
+% a_t			A sub t (expr. matemática)
+% $a$			Letra matemática a (puede ser por ejemplo \tau o directamente una letra
+
+% Para enumerar:
+% \begin{itemize}
+% \item Enumerado 1.
+% \item Enumerado 2.
+% \end{itemize}
+
+% Para poner eps:
+% \begin{figure}
+% \begin{center}
+% \includegraphics[scale=0.6]{Nombre del eps}
+% \caption{Lo que va a decir abajo}
+% \label{Para hacerle referencia}
+% \end{center}
+% \end{figure}
+
+% Para hacer ecuación:
+% \begin{equation}
+% \label{Para hacerle referencia}
+% Expresion
+% \end{equation}
+
+% Para hacer tabla:
+% \begin{table}
+% \begin{center}
+% \begin{tabular}{|c|c|} \hline Formato: cada pipe es una línea vertical.
+% a & b \\ \hline Formato: cada \hline es una línea horizontal.
+% \end{tabular}
+% \caption{Nombre de la tabla.}
+% \label{Para hacerle referencia}
+% \end{center}
+% \end{table}
+
+
+\title{{\bf Semáforos en Minix}}
+
+\begin{document}
+
+\author{M. Besio \and P. García \and H.Rajchert}
+\date{22 de Noviembre de 2006}
+\maketitle
+\thispagestyle{fancy}
+
+\abstract{En este trabajo expondremos la información y los resultados obtenidos al realizar una modificación al sistema operativo Minix.}
+
+\section{Enunciado: Modificaciones a Minix}
+
+\subsection{Objetivo}
+
+El proyecto a realizar consiste en agregar al Sistema Operativo Minix 2.0.0, una característica o herramienta, que dispongan los Sistemas Operativos más elaborados y que Minix no tenga.
+El proyecto está centrado en la investigación del funcionamiento de Minix, manejo de pasaje de mensajes, servidores, task (drivers), manejo de system calls e interrupciones. La primera parte consiste en el estudio de las posibles implementaciones a realizar, para luego comenzar con las modificaciones necesarias.
+
+\subsection{Temas propuestos}
+
+\begin{itemize}
+\item Archivos ocultos: Se deben poder ocultar archivos, según el dueño, grupos o otros, una estructura similar a lectura-escritura-ejecución.
+\item Cola de mensajes: Debe cumplir con el estándar de POSIX.
+\item Semáforos: Debe cumplir con el estándar de POSIX.
+\item Mount de FAT 12 (read): Se debe poder hacer un mount de un diskete con FAT 12 y ver su contenido, pero no modificarlo.
+\end{itemize}
+Se aceptará incluir otros temas además de los aquí presentados. La propuesta de los alumnos debe ser aprobada por los integrantes de la cátedra en función de la complejidad del tema elegido y de la cantidad de alumnos que integren el grupo.
+
+\subsection{Contenido}
+
+\subsubsection{Script de instalación y desinstalación}
+El grupo debe desarrollar un script que realice lo siguiente:
+
+En la instalación:
+\begin{itemize}
+\item Backup de archivos fuentes que se van a modificar.
+\item Copiar archivos fuentes modificados.
+\item Compilar el kernel.
+\end{itemize}
+
+En la desinstalación:
+\begin{itemize}
+\item Restaurar los arhivos fuentes resguardados.
+\item Compilar el kernel.
+\end{itemize}
+
+El objetivo del script es no modificar la instalación de Minix existente.
+
+\subsubsection{Programas de prueba}
+Se deberán desarrollar y documentar debidamente los programas de testeo utilizados por el grupo, explicando en cada uno su función.
+
+\subsubsection{Páginas de manuales}
+Cada grupo deberá incluir en el sistema los manuales (programa man) de las nuevas funcionalidades que hayan implementado.
+
+\subsubsection{Informe}
+El informe debe contener las siguientes secciones como mínimo:
+\begin{itemize}
+\item Carátula.
+\item Enunciado del TP.
+\item Tema elegido.
+\item Listado de los fuentes de Minix modificados y los fuentes nuevos, comentando brevemente en cada caso la modificación realizada y el objetivo de la misma. (En el informe impreso, en tipo de letra ``Bold'' o ``Negrita'').
+\item Manual del usuario. Comandos. Forma de compilar.
+\item Programas de test. Explicación de su funcionamiento.
+\item Funcionamiento interno de Minix analizado.
+\end{itemize}
+Todos estos ítem serán evaluados.
+
+\subsection{Consideraciones}
+\begin{itemize}
+\item Es posible utilizar en el trabajo rutinas o librerías ya desarrolladas consultando previamente al docente a cargo la inclusión de las mismas. No está permitido incluir rutinas o librerías desarrolladas por integrantes de otros grupos.
+\item El tipo de diseño y la forma de implementación serán discutidos entre el grupo y la cátedra durante las clases de laboratorio, dejando la posibilidad de modificar éste enunciado escrito, previo acuerdo entre el docente y los integrantes del grupo.
+\item Para la evaluación se tendrá en cuenta no sólo el funcionamiento del programa sino también el informe y la investigación realizada sobre el funcionamiento interno del Sistema operativo Minix.
+\end{itemize}
+
+\subsection{Material a entregar}
+Cada grupo deberá entregar:
+\begin{itemize}
+\item 1 Diskette con los archivos fuentes y el informe del trabajo realizado (FAT 12).
+\item Informe impreso.
+\end{itemize}
+
+\subsection{Integrantes del grupo}
+El trabajo debe ser realizado en grupos de 3 integrantes o menos. La nota definitiva se compone de un coloquio oral y demostración del trabajo funcionando en el que deben estar presentes, sin excepciones, todos los integrantes del grupo para su defensa el día de la entrega.
+
+\subsection{Fecha de entrega y defensa del trabajo final}
+Miércoles 22 de Noviembre a las 18 hs en el Laboratorio LI1.
+
+\section{Tema elegido}
+El tema que elegimos es semáforos, dado que Minix no tiene un soporte nativo de los mismos y proporcionan ventajas significativas cuando se trata con problemas de concurrencia.
+
+\section{Cambios en los fuentes de Minix}
+
+
+\section{Manual del usuario}
+Una vez instalada la modificación, usted podrá acceder al manual online de la biblioteca y cada una de las funciones implementadas por medio del comando \verb#man#. Las funciones corresponden al estándar POSIX y son las siguientes:
+\begin{itemize}
+\item \verb#sem_close#
+\item \verb#sem_destroy#
+\item \verb#sem_getvalue#
+\item \verb#sem_init#
+\item \verb#sem_open#
+\item \verb#sem_post#
+\item \verb#sem_trywait#
+\item \verb#sem_unlink#
+\item \verb#sem_wait#
+\end{itemize}
+
+\section{Programas de prueba}
+Dado que la implementación de la system call fue a destiempo, las funciones de la biblioteca en sí no podían ser probadas durante su producción misma. Por lo tanto, se ha desarrollado una aplicación cliente-servidor TCP/IP para simular el funcionamiento de interno de Minix al responder cuando se realizan las operaciones con semáforos. No sólo resultó provechoso para detectar bugs de antemano, sino que sirvió para dejar muy en claro la arquitectura interna de microkernel de Minix.
+
+\section{Funcionamiento interno de Minix}
+
+
+
+\begin{thebibliography}{99}
+\bibitem{Referencia1}``Sistemas Operativos: Diseño e implementación, Segunda Edición'', Tanenbaum \& Woodhull, Ed. Pearson, 1998, New Jersey.
+\bibitem{Referencia2}http://www.opengroup.org/onlinepubs/000095399/basedefs/semaphore.h.html
+\end{thebibliography}
+
+\newpage
+
+\tableofcontents
+
+\begin{center}
+\tiny{\emph{Made with \LaTeX}}
+\end{center}
+
+\end{document}
+
