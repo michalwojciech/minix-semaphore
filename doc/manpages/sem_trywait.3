@@ -1,0 +1,43 @@
+.TH "sem_wait, sem_trywait" 3 "22 de Noviembre de 2006" "Versión 1.0" "Minix programmer's manual"
+
+.SH NOMBRE
+
+.B sem_wait, sem_trywait
+\- desbloquear un semáforo
+
+.SH SINOPSIS
+.B #include <semaphore.h>
+
+.B int sem_trywait(sem_t *sem);
+
+.B int sem_wait(sem_t *sem);
+
+.SH DESCRIPCION
+La función sem_trywait() desbloquea el semáforo referenciado por sem sólo si el mismo no está actualmente bloqueado. Si estuviera bloqueado no lo desbloquea.
+
+sem_wait() bloqueará el semáforo referenciado por sem. Si el valor del mismo es cero, el hilo o proceso que invoque la función no volverá de la función hasta que el semáforo sea desbloqueado. En tal caso volverá a bloquearse pero pasará el control a esta función.
+
+.SH VALOR DE RETORNO
+Ambas funciones, en una ejecución exitosa devolverán el valor cero. En caso de error no se alterará el semáforo, se devolverá -1 y la variable errno será actualizada para indicarlo.
+
+.SH CONFORME A
+POSIX.
+
+.SH VER TAMBIÉN
+.B sem_close
+(3),
+.B sem_destroy
+(3),
+.B sem_getvalue
+(3), 
+.B sem_init
+(3), 
+.B sem_open
+(3),
+.B sem_post
+(3),
+.B sem_timedwait
+(3), 
+.B sem_unlink
+(3)
+
