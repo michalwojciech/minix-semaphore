@@ -31,11 +31,8 @@ typedef void * valueT;
  * ---------------------------------------
  * Reserva espacio en memoria para una nueva tabla de hash.
  * Retorna un handle a la misma, o NULL si hubo problemas.
- * Recibe como segundo parametro una funcion de liberacion
- * de los valores asociados a las claves, que SOLO ES LLAMADA
- * CUANDO SE HACE UN FreeHashTable.
  */
-hashTableADT NewHashTable(void (*removeFn)(void *));
+hashTableADT NewHashTable(void);
 
 
 

@@ -71,7 +71,7 @@ void
 init_sem_server(void)
 {
 	int i;
-	sem_name_map = NewHashTable(free);
+	sem_name_map = NewHashTable();
 
 /*	sem_array = calloc (INITIAL_SEM , sizeof(sem_cdt));*/
 	sem_array_size = INITIAL_SEM;
