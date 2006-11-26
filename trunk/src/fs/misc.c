@@ -27,7 +27,7 @@
 #include "dev.h"
 #include "param.h"
 
-
+int semaphore_entry(void);
 
 /*===========================================================================*
  *				do_semaph				     *
@@ -95,7 +95,7 @@ PUBLIC int do_fcntl()
   if ((f = get_filp(fd)) == NIL_FILP) return(err_code);
 
   switch (request) {
-     case F_DUPFD: 
+     case F_DUPFD:
 	/* This replaces the old dup() system call. */
 	if (addr < 0 || addr >= OPEN_MAX) return(EINVAL);
 	if ((r = get_fd(addr, 0, &new_fd, &dummy)) != OK) return(r);
@@ -103,23 +103,23 @@ PUBLIC int do_fcntl()
   	fp->fp_filp[new_fd] = f;
   	return(new_fd);
 
-     case F_GETFD: 
+     case F_GETFD:
 	/* Get close-on-exec flag (FD_CLOEXEC in POSIX Table 6-2). */
 	return( ((fp->fp_cloexec >> fd) & 01) ? FD_CLOEXEC : 0);
 
-     case F_SETFD: 
+     case F_SETFD:
 	/* Set close-on-exec flag (FD_CLOEXEC in POSIX Table 6-2). */
 	cloexec_mask = 1L << fd;	/* singleton set position ok */
 	clo_value = (addr & FD_CLOEXEC ? cloexec_mask : 0L);
 	fp->fp_cloexec = (fp->fp_cloexec & ~cloexec_mask) | clo_value;
 	return(OK);
 
-     case F_GETFL: 
+     case F_GETFL:
 	/* Get file status flags (O_NONBLOCK and O_APPEND). */
 	fl = f->filp_flags & (O_NONBLOCK | O_APPEND | O_ACCMODE);
-	return(fl);	
+	return(fl);
 
-     case F_SETFL: 
+     case F_SETFL:
 	/* Set file status flags (O_NONBLOCK and O_APPEND). */
 	fl = O_NONBLOCK | O_APPEND;
 	f->filp_flags = (f->filp_flags & ~fl) | (addr & fl);
