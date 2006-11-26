@@ -36,9 +36,6 @@ main(void)
 		O_RDWR | O_CREAT,
 		S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
 
-	s_empty = sem_open("/empty", O_RDWR | O_CREAT, S_IRUSR | S_IWUSR, ITEMS);
-	s_full = sem_open("/full", O_RDWR | O_CREAT, S_IRUSR | S_IWUSR, 0);
-	mutex = sem_open("/mutex", O_RDWR | O_CREAT, S_IRUSR | S_IWUSR, 1);
 
 	/* Genero los procesos consumidor y productor */
 	if ((pid = fork()) == -1)
@@ -47,8 +44,12 @@ main(void)
 		/* Proceso hijo - Consumidor */
 		consumer();
 	else
+	{
 		/* Proceso padre - Productor */
 		producer();
+		/* Espero a mi hijo */
+		wait(NULL);
+	}
 
 	return 0;
 }
@@ -68,27 +69,29 @@ producer(void)
 {
 	int item;
 	int items = ITEMS;
-	
+	s_empty = sem_open("/empty",  O_CREAT, 0, ITEMS);
+	s_full = sem_open("/full",  O_CREAT, 0, 0);
+	mutex = sem_open("/mutex",  O_CREAT, 0, 1);
+
 	/* Ciclo para escritura de cada elemento */
 	while (items--)
 	{
-		/* Genero el ítem */
+		/* Genero el item */
 		item = int_rand(ITEM_MAX, ITEM_MIN);
-		
-		/* Decremento la cantidad de casilleros vacíos.
-		 * Si lo logro es porque había espacio. */
+		/* Decremento la cantidad de casilleros vacios.
+		 * Si lo logro es porque habia espacio. */
 		sem_wait(s_empty);
 
-		/* Entro a la región crítica: escribo archivo */
+		/* Entro a la region critica: escribo archivo */
 		sem_wait(mutex);
 
 		/* Coloco el elemento en el archivo */
 		write(fd, (void*)&item, sizeof(int));
-		//sync();
+		sync();
 		//sleep(T_BETWEEN);
-		printf("PRODUCTOR: Producción de %d.\n", item);
+		printf("PRODUCTOR: Produccion de %d.\n", item);
 
-		/* Salgo de la región crítica de escritura */
+		/* Salgo de la region critica de escritura */
 		sem_post(mutex);
 
 		/* Incremento la cantidad de casilleros llenos */
@@ -100,6 +103,7 @@ producer(void)
 	sem_close(s_empty);
 	sem_close(s_full);
 	sem_close(mutex);
+	printf("PRODUCTOR: Me muero\n");
 }
 
 
@@ -109,6 +113,10 @@ consumer(void)
 {
 	int item;
 	int items = ITEMS;
+	
+	s_empty = sem_open("/empty",  O_CREAT, 0, ITEMS);
+	s_full = sem_open("/full",  O_CREAT, 0, 0);
+	mutex = sem_open("/mutex",  O_CREAT, 0, 1);
 
 	/* Ciclo para lectura de cada elemento */
 	while (items--)
@@ -121,12 +129,13 @@ consumer(void)
 		sem_wait(mutex);
 
 		/* Consumo un elemento desde el archivo */
-		read(fd, (void*)&item, sizeof(int));
-//		sleep(T_BETWEEN);
-		printf("CONSUMIDOR: Consumición de %d.\n", item);
+		int p = read(fd, (void*)&item, sizeof(int));
+		printf("read devolvio %d\n", p);
+		printf("CONSUMIDOR: Consumicion de %d.\n", item);
 
 		/* Salgo de la región crítica de escritura */
 		sem_post(mutex);
+		sleep(T_BETWEEN);
 
 		/* Incremento la cantidad de casilleros vacíos */
 		sem_post(s_empty);
@@ -141,5 +150,6 @@ consumer(void)
 	sem_close(s_empty);
 	sem_close(s_full);
 	sem_close(mutex);
+	printf("CONSUMIDOR: Me muero\n");
 }
 

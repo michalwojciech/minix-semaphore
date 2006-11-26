@@ -156,35 +156,75 @@ El trabajo debe ser realizado en grupos de 3 integrantes o menos. La nota defini
 Miércoles 22 de Noviembre a las 18 hs en el Laboratorio LI1.
 
 \section{Tema elegido}
-El tema que elegimos es semáforos, dado que Minix no tiene un soporte nativo de los mismos y proporcionan ventajas significativas cuando se trata con problemas de concurrencia.
+El tema que elegimos es semáforos, dado que Minix no tiene un soporte nativo de los mismos y proporcionan ventajas significativas cuando se trata con problemas de concurrencia. Lo implementamos bajo el estándar POSIX.
 
 \section{Cambios en los fuentes de Minix}
+Se agregó una biblioteca con las funciones que indica el estándar de POSIX para implementar semáforos. Puede obtener una lista de las mismas en la próxima sección. La misma fue incorporada a Minix como una biblioteca estándar.
+Se modificó el servidor de FS para agregarle un system call que invoca a estas funciones. Para lograrlo se agregó el número de la nueva system call en \verb#callnr.h# y en \verb#table.c# de \verb#fs# se la implementó, mientras que en el de \verb#mm# se colocó la contrapartida de la system call indicando que no se use.
 
+Los archivos de Minix modificados o agregados son los siguientes:
+\begin{itemize}
+\item \verb#fs/Makefile# - Cambiado para compilar.
+\item \verb#fs/misc.c# - Agregada una funcion que captura el system call.
+\item \verb#fs/proto.h# - Agregados los prototipos de la funcion de misc.c.
+\item \verb#fs/main.c# - Agregado el init para malloc y la inicializacion de las funciones del semaforo.
+\item \verb#fs/table.c# - Agregado el system call.
+\item \verb#mm/table.c# - Agregado el \verb#no_sys#.
+\item \verb#fs/my_param.h# - Archivo con macros para envolver mensajes.
+\item \verb#fs/semaphore.c# - Implementacion de la biblioteca.
+\item \verb#fs/semaphore2.c# - Contenido de la parte del semaforo que interactua con Minix.
+\item \verb#/usr/include/minix/callnr.h# - Agregado el numero de system call.
+\item \verb#/usr/include/semaphore.h# - Prototipos del semaforo.
+\end{itemize}
 
 \section{Manual del usuario}
+Para instalar esta modificación en Minix Ud. deberá ejecutar el script \verb#tpminix.sh# seguido de las palabras clave \verb#install# o \verb#uninstall#. Con esto se modificará el sistema agregando la funcionalidad del trabajo.
+
 Una vez instalada la modificación, usted podrá acceder al manual online de la biblioteca y cada una de las funciones implementadas por medio del comando \verb#man#. Las funciones corresponden al estándar POSIX y son las siguientes:
 \begin{itemize}
-\item \verb#sem_close#
-\item \verb#sem_destroy#
-\item \verb#sem_getvalue#
-\item \verb#sem_init#
-\item \verb#sem_open#
-\item \verb#sem_post#
-\item \verb#sem_trywait#
-\item \verb#sem_unlink#
-\item \verb#sem_wait#
+\item \verb#int sem_close(sem_t *sem);#
+\item \verb#int sem_destroy(sem_t *sem);#
+\item \verb#int sem_getvalue(sem_t *sem, int *sval);#
+\item \verb#int sem_init(sem_t *sem, int pshared, unsigned value);#
+\item \verb#sem_t *sem_open(const char *name, int oflag, ...);#
+\item \verb#int sem_post(sem_t *sem);#
+\item \verb#int sem_trywait(sem_t *sem);#
+\item \verb#int sem_unlink(const char *name);#
+\item \verb#int sem_wait(sem_t *sem);#
 \end{itemize}
 
 \section{Programas de prueba}
-Dado que la implementación de la system call fue a destiempo, las funciones de la biblioteca en sí no podían ser probadas durante su producción misma. Por lo tanto, se ha desarrollado una aplicación cliente-servidor TCP/IP para simular el funcionamiento de interno de Minix al responder cuando se realizan las operaciones con semáforos. No sólo resultó provechoso para detectar bugs de antemano, sino que sirvió para dejar muy en claro la arquitectura interna de microkernel de Minix.
+El problema que resuelve la aplicación \verb#prod_cons# es el clásico de consumidor-productor. Para ello se requieren dos o más procesos, al menos uno productor y otro consumidor. Los primeros producen mensajes y los segundos los consumen.
+
+Dado que la implementación de la system call fue a destiempo, las funciones de la biblioteca en sí no podían ser probadas durante su producción misma (en Linux). Por lo tanto, se ha desarrollado una aplicación en Linux entera cliente-servidor TCP/IP que emula la IPC de Minix con pasaje de mensajes por sockets.
+
+Para compilarla se debe acceder a \verb#src/tests/linux# y ejecutar el script \verb#compilar_ejemplos.sh#. Una vez completada la compilación se podrá iniciar el productor con \verb#prod_cons p# y el consumidor con \verb#prod_cons c#. Se pueden lanzar varios consumidores y varios productores a la vez (debe lanzarse desde varias terminales dado que el programa se bloquea esperando teclas). Una vez dentro, por cada caracter que se ingrese (incluido ENTER) se le estará indicando que consuma (o produzca, según sea el caso) un elemento. Por ejemplo, si se ingresa \verb#aaa# en el consumidor, se consumirán (o se intentará consumir) 4 elementos (3 letras + ENTER). De esta manera podrá apreciarse cómo es la dinámica de los semáforos detrás de esta lógica, y probar su funcionamiento en Linux.
+
+En Minix, el mismo programa se ejecuta nativamente y se encuentra en \verb#/usr/ast/sem/#.
+
+También se incluye otro programa (\verb#prod_cons_init#) que funciona de la misma manera que el anterior, sólo que no realiza \verb#sem_open# y \verb#sem_close# sino que realiza \verb#sem_init# y \verb#sem_destroy#.
 
 \section{Funcionamiento interno de Minix}
+Minix tiene una estructura interna dividida en cuatro niveles. En su base se encuentra el administrador de procesos, seguido de las tareas (drivers), los servidores y finalmente los procesos de usuario. La capa de administración de procesos se encarga de atrapar todas las interrupciones, alternar entre tareas y proveer al sistema del pasaje de mensajes entre procesos como forma de intercomunicación. La siguiente capa contiene los procesos que manejan la comunicación con los dispositivos de distintos tipos. Dentro de ellos se encuentra el System Task, que si bien no interactúa con ningún dispositivo, existe para proveer servicios como copiar partes entre diferentes regiones de memoria. La capa 3, la de servicios, permite al nivel inferior de la cadena tener la asistencia necesaria para su correcto funcionamiento. Por ejemplo, aquí se ubica el MM (Memory Manager) que proporciona llamadas al sistema tan importantes como fork, exec, etc. En la última capa se ubican los procesos de usuario, como el shell, editores de texto, compiladores y programas escritos por el usuario.
 
+Particularmente, en nuestro interés cayó el tema de IPCs en Minix. Este cuenta con tres primitivas para enviar y recibir mensajes. Ellas son:
+\begin{itemize}
+\item \verb#send(dest, &message)#
+\item \verb#receive(source, &message)#
+\item \verb#send_rec(src_dst, &message)#
+\end{itemize}
+Cuando un mensaje es enviado a un proceso que no está esperando por uno, el proceso que lo envía se bloquea. Fue con la función \verb#send_rec# que hemos implementado el bloqueo de los procesos, en combinación con la variable global \verb#dont_reply# que selecciona a qué procesos responder (al no responder, se bloquean).
 
+Con respecto a nuestras pruebas, el desarrollo de la aplicación cliente-servidor no sólo resultó provechoso para detectar bugs de antemano, sino que sirvió para dejar muy en claro la arquitectura interna de microkernel de Minix. El mismo Tanenbaum aclara que la estructura de Minix puede pensarse como una aplicación de este tipo, dado que el pasaje de mensajes es análogo a una transacción en TCP/IP.
+
+Cabe destacar que la biblioteca implementada no soporta la reentrancia. Si esta misma biblioteca se hubiera implementado para Linux debería haberse creado con soporte para la reentrancia, dado que allí se pueden producir interrupciones a la ejecución de la misma. En cambio, Minix entre niveles distintos no presenta problema dado que los procesos se comunican mediante colas de mensajes, y hasta que el nivel superior no termine de atender el pedido, no se pasará a otro.
 
 \begin{thebibliography}{99}
 \bibitem{Referencia1}``Sistemas Operativos: Diseño e implementación, Segunda Edición'', Tanenbaum \& Woodhull, Ed. Pearson, 1998, New Jersey.
-\bibitem{Referencia2}http://www.opengroup.org/onlinepubs/000095399/basedefs/semaphore.h.html
+\bibitem{Referencia2}http://www.opengroup.org/onlinepubs/000095399/
+basedefs/semaphore.h.html
+\bibitem{Referencia3}http://www.midnightsoret.com.ar/personales/
+alejandrovaldez/minix/minixSystemCall.html
 \end{thebibliography}
 
 \newpage
@@ -196,4 +236,4 @@ Dado que la implementación de la system call fue a destiempo, las funciones de l
 \end{center}
 
 \end{document}
-
+ 
