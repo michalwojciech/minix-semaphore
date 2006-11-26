@@ -30,7 +30,7 @@ struct hashTableCDT h1;
 /* Implementacion de funciones publicas */
 
 hashTableADT
-NewHashTable(void (*removeFn)(void *))
+NewHashTable(void)
 {
 	int i;
 	for (i=0; i<MAX_HASH_ELEM; i++)
