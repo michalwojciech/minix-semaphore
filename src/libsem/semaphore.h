@@ -1,6 +1,11 @@
 #ifndef __MINIX_SEM__
 #define __MINIX_SEM__
 
+#ifdef _LINUX__
+#define _ANSI_H 
+#define _PROTOTYPE(x,y) x y;
+#endif
+
 #ifndef _ANSI_H
 #include <ansi.h>
 #endif
