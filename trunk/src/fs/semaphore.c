@@ -12,7 +12,7 @@
 #include "hash.h"
 #include "list.h"
 
-#define DEBUG 1
+#define DEBUG 0
 
 #define INITIAL_SEM 10
 #define SEM_INC 10
@@ -402,7 +402,6 @@ sem_getvalue(sem_t *sem, int *sval)
 	
 	/* Devuelvo el valor asociado al semaforo */
 	*sval = sem_array[sem_fd].sem_count;
-	printf("semaphore.c: SEM_GETVALUE: value = %d\n", *sval);	
 
 	return 0;
 }

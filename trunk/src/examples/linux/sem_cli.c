@@ -245,7 +245,7 @@ sem_destroy(sem_t * handle)
 	if (connection_send(conn, get_buffer(), get_buffer_size()) < 0)
 	{
 		printf("No se puede escribir\n");
-		return;
+		return -1;
 	}
 
 	clear_buffer();
@@ -253,7 +253,7 @@ sem_destroy(sem_t * handle)
 	if (cc < 0)
 	{
 		printf("No se puede leer\n");
-		return;
+		return -1;
 	}
 	return get_long();
 }

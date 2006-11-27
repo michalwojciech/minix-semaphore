@@ -105,19 +105,19 @@ int
 HashTableFind(hashTableADT handle, keyT key, valueT *target)
 {
 	int i;
-	printf("HASH FIND: looking %s\n", key);
+/*	printf("HASH FIND: looking %s\n", key);*/
 	for (i = 0; i < MAX_HASH_ELEM ; i++)
 	{
 		if ( handle->entry_array[i].key != NULL )
 		{	
-			printf("HASH FIND: i = %d, key = %s\n", i, handle->entry_array[i].key);
+/*			printf("HASH FIND: i = %d, key = %s\n", i, handle->entry_array[i].key);*/
 			if (strncmp( handle->entry_array[i].key, key, MAX_STR) == 0)
 			{
-				printf("HASH FIND: FOunded\n");
+/*				printf("HASH FIND: FOunded\n");*/
 				if ( target != NULL )
 				{
 					*target = handle->entry_array[i].value; 
-					printf("HASH FIND: *target = %d\n", *target);
+/*					printf("HASH FIND: *target = %d\n", *target);*/
 				}
 				return 1;
 			}

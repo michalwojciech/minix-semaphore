@@ -104,7 +104,7 @@ free_list(struct listCDT *list)
 
 static int ListFindNode(listADT, nodeCDT *, listElementT, nodeCDT **);
 
-#define DEBUG 1
+#define DEBUG 0
 
 /* Implementacion de funciones publicas */
 
