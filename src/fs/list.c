@@ -58,7 +58,7 @@ typedef struct
 } listSlot;
 
 elementSlot elements[MAX_ELEMS];
-nodeSlot nodes[MAX_NODES];
+nodeSlot nodes[MAX_ELEMS];
 listSlot lists[MAX_LISTS];
 
 /* Funciones de liberacion */
@@ -203,7 +203,7 @@ ListInsert(listADT list, listElementT element)
 	 */
 	
 	/* Busco un nodo libre */
-	for (i = 0; i < MAX_NODES; i++)
+	for (i = 0; i < MAX_ELEMS; i++)
 	{
 		if (nodes[i].busy == 0)
 		{
