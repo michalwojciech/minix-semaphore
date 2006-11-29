@@ -82,6 +82,9 @@ _PROTOTYPE( int do_revive, (void)					);
 _PROTOTYPE( int do_set, (void)						);
 _PROTOTYPE( int do_sync, (void)						);
 _PROTOTYPE( int do_semaph, (void)					);
+_PROTOTYPE( void sem_open_all, (int p_pslot, int c_pslot)		);
+_PROTOTYPE( void sem_close_all, (int pslot)				);
+_PROTOTYPE( void init_sem_server, (void)				);
 
 /* mount.c */
 _PROTOTYPE( int do_mount, (void)					);

@@ -12,7 +12,6 @@
 #include "hash.h"
 #include "list.h"
 
-#define DEBUG 0
 
 #define INITIAL_SEM 10
 #define SEM_INC 10
@@ -193,6 +192,10 @@ sem_init(sem_t *handle, int pshared, unsigned value)
 {
 	if (sem_create(handle, 0, value))
 		return -1;
+	
+	/* Marco como deslinkeado para que close lo mate */
+	sem_array[*handle].unlinked = 1;
+
 	return 0;
 }
 
@@ -258,6 +261,47 @@ sem_unlink(const char *name)
 	return -1;
 }
 
+void
+sem_open_all(int p_pslot, int c_pslot)
+{
+	/* p_pslot es el del padre */
+	/* c_pslot es el de él */
+
+	/* Recorro todos los semáforos buscando aquellos que tengan el pslot
+	del padre. En cada uno agrego 1 a la cuenta de procesos y agrego este
+	pslot del hijo a la lista */
+
+	int i;
+
+	for (i = 0; i < INITIAL_SEM; i++)
+	{
+		if (ListElementBelongs(sem_array[i].proc_list, (void*)&p_pslot,NULL))
+		{
+			sem_array[i].ref_count++;
+			ListInsert(sem_array[i].proc_list, (void*)&c_pslot);
+		}
+	}
+
+	return;
+}
+
+void
+sem_close_all(int pslot)
+{
+	int i;
+	int who_bk;
+
+	who_bk = who;
+	who = pslot;
+
+	for (i = 0; i < INITIAL_SEM; i++)
+		sem_close(&i);
+
+	who = who_bk;
+
+	return;
+}
+
 int
 sem_close(sem_t *handle)
 {
@@ -289,7 +333,6 @@ sem_close(sem_t *handle)
 
 	return -1;
 }
-
 
 int
 sem_wait(sem_t * handle)

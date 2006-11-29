@@ -20,7 +20,6 @@
 
 
 #define MAX_NAME 255
-#define DEBUG 0
 
 
 /* funciones para comunicación de procesos */

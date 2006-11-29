@@ -1,0 +1,41 @@
+.TH sem_close 3 "22 de Noviembre de 2006" "Versión 1.0" "Minix programmer's manual"
+
+.SH NOMBRE
+
+.B sem_close
+\- cerrar un semáforo nombrado
+
+.SH SINOPSIS
+.B #include <semaphore.h>
+
+.B int sem_close(sem_t *sem);
+
+.SH DESCRIPCION
+La función sem_close() indica que el proceso invocador ha terminado de utilizar el semáforo indicado por sem. Los efectos de llamar a sem_close() por un semáforo no nombrado (uno creado por sem_init()) no están definidos. La función sem_close() liberará (esto es, hará disponible para reusarse en un sem_open() subsecuente de este proceso) cualquier recurso del sistema utilizados por el mismo por este proceso para este semáforo. El efecto de subsecuentes usos del semáforo indicado por sem por este proceso no está definido. Si el semáforo no ha sido removido exitosamente por sem_unlink(), sem_close() no tendrá efecto sobre el estado del semáforo. Si sem_unlink() se ha invocado exitosamente sobre el semáforo, cuando todos los procesos que lo hayan abierto lo cierren el semáforo dejará de ser accesible.
+
+.SH VALOR DE RETORNO
+En una ejecución exitosa se devolverá el valor cero. En caso de error se devolverá -1 y la variable errno será actualizada para indicarlo.
+
+.SH CONFORME A
+POSIX.
+
+.SH VER TAMBIÉN
+.B sem_destroy
+(3),
+.B sem_getvalue
+(3), 
+.B sem_init
+(3), 
+.B sem_open
+(3), 
+.B sem_post
+(3), 
+.B sem_timedwait
+(3), 
+.B sem_trywait
+(3), 
+.B sem_unlink
+(3),
+.B sem_wait
+(3) 
+
