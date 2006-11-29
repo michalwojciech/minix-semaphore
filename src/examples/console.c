@@ -65,7 +65,7 @@ get_sem(void)
 }
 
 void
-_free_space()
+free_space(void)
 {
 	int fd = get_sem_fd();
 	sem_array[fd] = SEM_FAILED;
@@ -93,7 +93,8 @@ insert_sem(char * name, sem_t * sem)
 	}
 }
 
-void _open(void)
+void 
+m_open(void)
 {
 	int num = -1;
 	int flags;
@@ -151,7 +152,7 @@ void _open(void)
 }
 
 void
-_wait()
+m_wait(void)
 {
 	int rta;
 	sem_t * sem;
@@ -165,7 +166,7 @@ _wait()
 }
 
 void
-_trywait()
+m_trywait(void)
 {
 	int rta;
 	sem_t * sem;
@@ -179,7 +180,7 @@ _trywait()
 }
 
 void
-_getvalue()
+m_getvalue(void)
 {
 	int rta, value;
 	sem_t * sem;
@@ -195,7 +196,7 @@ _getvalue()
 }
 
 void
-_post()
+m_post(void)
 {
 	int rta;
 	sem_t * sem;
@@ -209,7 +210,7 @@ _post()
 }
 
 void
-_close()
+m_close(void)
 {
 	int rta;
 	sem_t * sem;
@@ -223,7 +224,7 @@ _close()
 }
 
 void
-_unlink()
+m_unlink(void)
 {
 	int rta;
 	char * sem;
@@ -236,7 +237,8 @@ _unlink()
 	putchar('\n');
 }
 
-void _sem_init(void)
+void 
+m_sem_init(void)
 {
 	int num = -1;
 	int flags;
@@ -263,7 +265,7 @@ void _sem_init(void)
 	putchar('\n');
 }
 void
-_destroy()
+m_destroy(void)
 {
 	int rta;
 	sem_t * sem;
@@ -299,16 +301,16 @@ main(int argc, char *argv[])
 		putchar('\n');
 		switch (opt)
 		{
-			case 1: _open(); break;
-			case 2: _wait(); break;
-			case 3: _post(); break;
-			case 4: _close(); break;
-			case 5: _unlink(); break;
-			case 6: _getvalue(); break;
-			case 7: _trywait(); break;
-			case 8: _sem_init(); break;
-			case 9: _destroy(); break;
-			case 10: _free_space(); break;
+			case 1: m_open(); break;
+			case 2: m_wait(); break;
+			case 3: m_post(); break;
+			case 4: m_close(); break;
+			case 5: m_unlink(); break;
+			case 6: m_getvalue(); break;
+			case 7: m_trywait(); break;
+			case 8: m_sem_init(); break;
+			case 9: m_destroy(); break;
+			case 10: free_space(); break;
 			default: printf("Opcion invalida\n");
 		}
 	}

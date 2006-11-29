@@ -1,0 +1,47 @@
+.TH sem_close 3 "22 de Noviembre de 2006" "Versión 1.0" "Minix programmer's manual"
+
+.SH NOMBRE
+
+.B sem_open
+\- inicializar y abrir un semáforo nombrado
+
+.SH SINOPSIS
+.B #include <semaphore.h>
+
+.B sem_t *sem_open(const char *name, int oflag);
+
+.B sem_t *sem_open(const char *name, int oflag, mode_t mode, unsigned int value);
+
+.SH DESCRIPCION
+La función sem_open() crea un nuevo semáforo POSIX o abre uno existente. Este semáforo es identificado por nombre.
+
+El argumento oflag especifica los flags que controlan la operación de la llamada. Si O_CREAT está especificado en oflag, el semáforo es creado si no existía previamente. Si O_CREAT y O_EXCL están especificados en oflag, se devuelve un error si el semáforo con el nombre dado ya existe.
+
+Si O_CREAT está definido en oflag, se deben proporcionar dos argumentos adicionales. El argumento mode especifica los permisos asociados al nuevo semáforo, de la misma manera en que lo hace open(2). El argumento value indica el valor inicial para el nuevo semáforo. Si se define O_CREAT y un semáforo con el nombre dado ya existe, los argumentos mode y value son ignorados.
+
+.SH VALOR DE RETORNO
+En una ejecución exitosa se devolverá la dirección del nuevo semáforo para facilitar la invocación de las demás funciones con relación a semáforos. En caso de error se devolverá SEM_FAILED y la variable errno será actualizada para indicarlo.
+
+.SH CONFORME A
+POSIX.
+
+.SH VER TAMBIÉN
+.B sem_close
+(3),
+.B sem_destroy
+(3),
+.B sem_getvalue
+(3), 
+.B sem_init
+(3), 
+.B sem_post
+(3), 
+.B sem_timedwait
+(3), 
+.B sem_trywait
+(3), 
+.B sem_unlink
+(3),
+.B sem_wait
+(3) 
+

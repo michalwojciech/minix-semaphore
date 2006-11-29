@@ -16,6 +16,7 @@
 \renewcommand{\footrulewidth}{0.4pt}
 \newcommand{\expon}[1]{~10^{#1}}
 \newcommand{\dif}[1]{\mathrm{d}#1}
+\def\us{\char`\_}
 
 % \\			Line break
 % \today		Fecha del sistema
@@ -164,17 +165,27 @@ Se modificó el servidor de FS para agregarle un system call que invoca a estas f
 
 Los archivos de Minix modificados o agregados son los siguientes:
 \begin{itemize}
-\item \verb#fs/Makefile# - Cambiado para compilar.
-\item \verb#fs/misc.c# - Agregada una funcion que captura el system call.
-\item \verb#fs/proto.h# - Agregados los prototipos de la funcion de misc.c.
-\item \verb#fs/main.c# - Agregado el init para malloc y la inicializacion de las funciones del semaforo.
-\item \verb#fs/table.c# - Agregado el system call.
-\item \verb#mm/table.c# - Agregado el \verb#no_sys#.
-\item \verb#fs/my_param.h# - Archivo con macros para envolver mensajes.
-\item \verb#fs/semaphore.c# - Implementacion de la biblioteca.
-\item \verb#fs/semaphore2.c# - Contenido de la parte del semaforo que interactua con Minix.
-\item \verb#/usr/include/minix/callnr.h# - Agregado el numero de system call.
-\item \verb#/usr/include/semaphore.h# - Prototipos del semaforo.
+\item \verb#fs/Makefile#\def\us{\char`\_} - Cambiado para compilar, se agregaron entradas para compilar el semáforo y para sus dependencias.
+\item \verb#fs/misc.c# - Agregada una función que captura el system call y llamadas a las funciones del semáforo que se deben llamar cuando los procesos mueren o hacen fork o exec.
+\item \verb#fs/proto.h# - Agregados prototipos de funciones del semáforo que usa el fs pero no son de la biblioteca.
+\item \verb#fs/main.c# - Agregada la inicialización de las funciones del semáforo en la inicialización del servidor.
+\item \verb#fs/table.c# - Agregado el system call a la tabla de llamadas del fs.
+\item \verb#mm/table.c# - Agregado el \verb#no_sys# a la tabla de llamadas del mm (el mm no responde a esta llamada).
+\item \verb#fs/my_param.h# - Archivo con macros para enmascarar los campos de la estructura de los mensajes.
+\item \verb#fs/semaphore.c# - Implementación de las funciones del semáforo en el servidor.
+\item \verb#fs/semaphore2.c# - Funciones del semáforo que abstraen a la implementación del semáforo del sistema en que corre e interactúan con Minix.
+\item \verb#/usr/src/lib/libsem/semaphore.c# - Agregado el número de system call.
+\item \verb#/usr/src/lib/libsem/syscall/sem_close.s# - System call para close.
+\item \verb#/usr/src/lib/libsem/syscall/sem_destroy.s# - System call para destroy.
+\item \verb#/usr/src/lib/libsem/syscall/sem_getvalue.s# - System call para getvalue.
+\item \verb#/usr/src/lib/libsem/syscall/sem_init.s# - System call para init.
+\item \verb#/usr/src/lib/libsem/syscall/sem_open.s# - System call para open.
+\item \verb#/usr/src/lib/libsem/syscall/sem_post.s# - System call para post.
+\item \verb#/usr/src/lib/libsem/syscall/sem_trywait.s# - System call para trywait.
+\item \verb#/usr/src/lib/libsem/syscall/sem_wait.s# - System call para unlink.
+\item \verb#/usr/include/minix/callnr.h# - Agregado el número de system call.
+\item \verb#/usr/include/semaphore.h# - Prototipos del semáforo.
+\item \verb#/usr/lib/i386/libsem.a# - Biblioteca de funciones del semáforo.
 \end{itemize}
 
 \section{Manual del usuario}
@@ -202,29 +213,398 @@ Para compilarla se debe acceder a \verb#src/tests/linux# y ejecutar el script \v
 
 En Minix, el mismo programa se ejecuta nativamente y se encuentra en \verb#/usr/ast/sem/#.
 
-También se incluye otro programa (\verb#prod_cons_init#) que funciona de la misma manera que el anterior, sólo que no realiza \verb#sem_open# y \verb#sem_close# sino que realiza \verb#sem_init# y \verb#sem_destroy#.
+También se incluye otro programa (\verb#pc_init#) que funciona de la misma manera que el anterior, sólo que no realiza \verb#sem_open# y \verb#sem_close# sino que realiza \verb#sem_init# y \verb#sem_destroy#.
 
 \section{Funcionamiento interno de Minix}
 Minix tiene una estructura interna dividida en cuatro niveles. En su base se encuentra el administrador de procesos, seguido de las tareas (drivers), los servidores y finalmente los procesos de usuario. La capa de administración de procesos se encarga de atrapar todas las interrupciones, alternar entre tareas y proveer al sistema del pasaje de mensajes entre procesos como forma de intercomunicación. La siguiente capa contiene los procesos que manejan la comunicación con los dispositivos de distintos tipos. Dentro de ellos se encuentra el System Task, que si bien no interactúa con ningún dispositivo, existe para proveer servicios como copiar partes entre diferentes regiones de memoria. La capa 3, la de servicios, permite al nivel inferior de la cadena tener la asistencia necesaria para su correcto funcionamiento. Por ejemplo, aquí se ubica el MM (Memory Manager) que proporciona llamadas al sistema tan importantes como fork, exec, etc. En la última capa se ubican los procesos de usuario, como el shell, editores de texto, compiladores y programas escritos por el usuario.
 
-Particularmente, en nuestro interés cayó el tema de IPCs en Minix. Este cuenta con tres primitivas para enviar y recibir mensajes. Ellas son:
+Particularmente, en nuestro interés cayó el manejo de IPCs en Minix. Este cuenta con tres primitivas para enviar y recibir mensajes. Ellas son:
 \begin{itemize}
 \item \verb#send(dest, &message)#
 \item \verb#receive(source, &message)#
 \item \verb#send_rec(src_dst, &message)#
 \end{itemize}
-Cuando un mensaje es enviado a un proceso que no está esperando por uno, el proceso que lo envía se bloquea. Fue con la función \verb#send_rec# que hemos implementado el bloqueo de los procesos, en combinación con la variable global \verb#dont_reply# que selecciona a qué procesos responder (al no responder, se bloquean).
+Para implementar el semáforo, tomamos ventaja de la existencia de las system calls de Minix. Cuando un proceso en Minix realiza una system call, utiliza un wrapper de la función \verb#send_rec#. Por motivos de seguridad, Minix no permite a los procesos de usuario realizar otro tipo de mensajería, ya que podría se que enviaran mensajes indiscriminadamente a los procesos de sistema, atareándolos inútilmente en forma abusiva. Esta implementación de semáforos, como decíamos, toma ventaja de el uso de esta función de envío-recepción porque bloquea al proceso esperando una respuesta a la llamada al sistema. Así, cuando un proceso entra en un semáforo y pide esperar en él, se ejecuta la llamada, se envía el mensaje al servidor y el proceso se bloquea en ese punto. Mientras tanto, el servidor, atiende el mensaje, y llama a la función correspondiente del semáforo, que según corresponda, enviará o no una respuesta al proceso invocador y así manejará el estado de bloqueo del mismo. La implementación de la llamada al sistema usa mensajes de tipo 2, e incluye en sus campos los valores que debe recibir la función correspondiente del semáforo. Además incluye un código que permite identificar la función del semáforo que se quiere invocar, lo que nos permite mejorar el diseño al no tener que agregar en la tabla de llamadas al sistema una entrada por cada función del semáforo, y en cambio poner un único punto de entrada al kernel para toda la biblioteca. El único parámetro que no viaja por mensajes es el nombre del semáforo, que es copiado desde el servidor con una función de copia de memoria del kernel. El uso de esta función nos permite limitar el largo del nombre a 255 caracteres, y evitar intentos de buffer overflow añadiendo seguridad al sistema. Luego de procesar el requerimiento del proceso de usuario dentro del servidor, se le responde através de un mensaje de tipo 1 con los valores de retorno de la función y valores que deben ser copiados por recibir parámetros por referencia.
 
 Con respecto a nuestras pruebas, el desarrollo de la aplicación cliente-servidor no sólo resultó provechoso para detectar bugs de antemano, sino que sirvió para dejar muy en claro la arquitectura interna de microkernel de Minix. El mismo Tanenbaum aclara que la estructura de Minix puede pensarse como una aplicación de este tipo, dado que el pasaje de mensajes es análogo a una transacción en TCP/IP.
 
+A modo de prueba incluímos una consola que interpreta comandos posix de semáforos que utilizamos para durante el desarrollo para probar el funcionamiento interno de las distintas funciones del semáforo. Cuando se ejecuta el programa, este ofrece varias acciones, una por cada función posix, más una que libera el espacio interno. Hay una macro que define la cantidad máxima de semáforos a usar por ese proceso. Cada vez que se crea un semáforo con open o init se consume uno de los semáforos, en caso de quedarse el proceso sin semáforos (no es lo mismo a que el sistema se quede sin recursos para semáforo). Por cada función que requiere un \verb#sem_t *# se le pide al usuario que diga cual es el semáforo con su nombre.
+
 Cabe destacar que la biblioteca implementada no soporta la reentrancia. Si esta misma biblioteca se hubiera implementado para Linux debería haberse creado con soporte para la reentrancia, dado que allí se pueden producir interrupciones a la ejecución de la misma. En cambio, Minix entre niveles distintos no presenta problema dado que los procesos se comunican mediante colas de mensajes, y hasta que el nivel superior no termine de atender el pedido, no se pasará a otro.
+
+\section{Man Pages}
+
+\subsection{Semaphore}
+
+\begin{tiny}
+\begin{verbatimtab}
+semaphore(3)               Minix programmer's manual              semaphore(3)
+
+NOMBRE
+       semaphore - Biblioteca que implementa semáforos en Minix.
+
+SINOPSIS
+       #include <semaphore.h>
+
+       int sem_close(sem_t *sem);
+
+       int sem_destroy(sem_t *sem);
+
+       int sem_getvalue(sem_t *sem, int *sval);
+
+       int sem_init(sem_t *sem, int pshared, unsigned int value);
+
+       sem_t *sem_open(const char *name, int oflag);
+
+       sem_t *sem_open(const char *name, int oflag, mode_t mode, unsigned int value);
+
+       int sem_post(sem_t *sem);
+
+       int sem_trywait(sem_t *sem);
+
+       int sem_unlink(const char *name);
+
+       int sem_wait(sem_t *sem);
+
+DESCRIPCION
+       Las  funciones  de  semáforo  permiten  hacer  operaciones  seguras sobre recursos compartidos. Vea las
+       páginas individuales para descripciones más detalladas sobre cada función. Un  semáforo  es  un  número
+       entero que nunca toma valores negativos. Sobre él se pueden realizar 2 operaciones básicas: incrementar
+       en uno (con la función sem_post) y decrementar en uno (con la función sem_wait). Si  el  semáforo  vale
+       cero al llamar a sem_wait, el proceso se bloquea hasta que el semáforo incremente su valor.
+
+       POSIX define dos tipos de semáforos: con y sin nombre.
+
+       Los  semáforos  con nombre se pueden identificar con una cadena de la forma /nombre. Dos o más procesos
+       pueden esperar en el mismo semáforo usando la misma cadena al llamar a la función sem_open.
+
+VER TAMBIÉN
+       sem_close (3), sem_destroy (3), sem_getvalue (3), sem_init (3), sem_open (3), sem_post (3),  sem_timed-
+       wait (3), sem_trywait (3), sem_unlink (3), sem_wait (3)
+\end{verbatimtab}
+\end{tiny}
+
+\subsection{Close}
+
+\begin{tiny}
+\begin{verbatimtab}
+sem_close(3)               Minix programmer's manual              sem_close(3)
+
+NOMBRE
+       sem_close - cerrar un semáforo nombrado
+
+SINOPSIS
+       #include <semaphore.h>
+
+       int sem_close(sem_t *sem);
+
+DESCRIPCION
+       La  función  sem_close()  indica que el proceso invocador ha terminado de utilizar el semáforo indicado
+       por sem. Los efectos de llamar a sem_close() por un semáforo no nombrado (uno creado por sem_init()) no
+       están  definidos.  La  función  sem_close()  liberará  (esto  es,  hará  disponible para reusarse en un
+       sem_open() subsecuente de este proceso) cualquier recurso del sistema utilizados por el mismo por  este
+       proceso  para este semáforo. El efecto de subsecuentes usos del semáforo indicado por sem por este pro-
+       ceso no está definido. Si el semáforo no ha sido removido exitosamente por sem_unlink(), sem_close() no
+       tendrá  efecto  sobre  el  estado  del  semáforo.  Si sem_unlink() se ha invocado exitosamente sobre el
+       semáforo, cuando todos los procesos que lo hayan abierto lo cierren el semáforo dejará de  ser  accesi-
+       ble.
+
+VALOR DE RETORNO
+       En  una  ejecución  exitosa  se devolverá el valor cero. En caso de error se devolverá -1 y la variable
+       errno será actualizada para indicarlo.
+
+CONFORME A
+       POSIX.
+
+VER TAMBIÉN
+       sem_destroy (3), sem_getvalue (3),  sem_init  (3),  sem_open  (3),  sem_post  (3),  sem_timedwait  (3),
+       sem_trywait (3), sem_unlink (3), sem_wait (3)
+
+Versión 1.0                 22 de Noviembre de 2006               sem_close(3)#
+\end{verbatimtab}
+\end{tiny}
+
+\subsection{Destroy}
+
+\begin{tiny}
+\begin{verbatimtab}
+sem_destroy(3)             Minix programmer's manual            sem_destroy(3)
+
+NOMBRE
+       sem_destroy - destruye un semáforo no nombrado
+
+SINOPSIS
+       #include <semaphore.h>
+
+       int sem_destroy(sem_t *sem);
+
+DESCRIPCION
+       La  función  sem_destroy  destruirá  el  semáforo  indicado por sem. Sólo un semáforo creado utilizando
+       sem_init puede ser destruido por sem_destroy; el efecto de llamar sem_destroy con un semáforo  no  nom-
+       brado  es indefinido, al igual que el uso subsecuente del semáforo hasta que se lo re-inicialice nueva-
+       mente.
+
+       Es seguro destruir un semáforo inicializado sobre el cual no haya threads  actualmente  bloqueados.  El
+       efecto de destruir un semáforo donde hayan threads bloqueados es indefinido.
+
+VALOR DE RETORNO
+       Ambas  funciones, en una ejecución exitosa se devolverá el valor cero. En caso de error se devolverá -1
+       y la variable errno será actualizada para indicarlo.
+
+CONFORME A
+       POSIX.
+
+VER TAMBIÉN
+       sem_close (3), sem_getvalue (3), sem_init (3), sem_open (3), sem_post (3), sem_timedwait (3),  sem_try-
+       wait (3), sem_unlink (3), sem_wait (3)
+
+Versión 1.0                 22 de Noviembre de 2006             sem_destroy(3)
+\end{verbatimtab}
+\end{tiny}
+
+\subsection{Getvalue}
+
+\begin{tiny}
+\begin{verbatimtab}
+sem_getvalue(3)            Minix programmer's manual           sem_getvalue(3)
+
+NOMBRE
+       sem_getvalue - obtener el valor de un semaforo
+
+SINOPSIS
+       #include <semaphore.h>
+
+       int sem_getvalue(sem_t *sem, int *sval);
+
+DESCRIPCION
+       La  función  sem_getvalue() actualizará el contenido apuntado por sval para tener el valor del semáforo
+       referenciado por sem sin afectar el estado del mismo. El valor representa el valor actual del  semáforo
+       presente  en  algún momento no especificado durante la llamada, y no necesariamente el valor actual del
+       semáforo al producirse la devolución del valor al proceso que invoca.
+
+       Si sem está bloqueado, sval apuntará a un número negativo cuyo módulo indicará el  número  de  procesos
+       esperando al semáforo en un momento no especificado durante la llamada.
+
+CONFORME A
+       POSIX.
+
+VALOR DE RETORNO
+       En  una  ejecución  exitosa  se devolverá el valor cero. En caso de error se devolverá -1 y la variable
+       errno será actualizada para indicarlo.
+
+VER TAMBIÉN
+       sem_close (3), sem_destroy (3), sem_init (3), sem_open (3), sem_post (3), sem_timedwait  (3),  sem_try-
+       wait (3), sem_unlink (3), sem_wait (3)
+
+Versión 1.0                 22 de Noviembre de 2006            sem_getvalue(3)
+\end{verbatimtab}
+\end{tiny}
+
+\subsection{Init}
+
+\begin{tiny}
+\begin{verbatimtab}
+sem_init(3)                Minix programmer's manual               sem_init(3)
+
+NOMBRE
+       sem_init - inicializar un semáforo no nombrado
+
+SINOPSIS
+       #include <semaphore.h>
+
+       int sem_init(sem_t *sem, int pshared, unsigned value);
+
+DESCRIPCION
+       La  función  sem_init inicializa el semáforo sin nombre referido por sem, utilizando como valor inicial
+       value. Luego de una exitosa invocación de sem_init, el semáforo podrá ser  utilizado  en  subsiguientes
+       llamadas a sem_wait, sem_trywait, sem_post y sem_destroy.
+
+       Si  el argumento pshared tiene un valor que no sea cero, el semáforo será compartido entre procesos. En
+       este caso, cualquier proceso que pueda acceder al semáforo  sem  podrá  utilizarlo  para  realizar  las
+       operaciones  antes  mencionadas.  Sólo  sem  podrá  ser utilizado para realizar las operaciones de sin-
+       cronización. El resultado de referir a copias de sem en llamadas a esas funciones es indefinido.
+
+       Si el argumento pshared es cero, el semáforo será compartido entre hilos del proceso,  los  que  podrán
+       efectuar cualquiera de las operaciones que figuran más arriba.
+
+       El intentar inicializar un semáforo ya inicializado resulta en un comportamiento no definido.
+
+VALOR DE RETORNO
+       En  una  ejecución  exitosa  se devolverá el valor cero. En caso de error se devolverá -1 y la variable
+       errno será actualizada para indicarlo.
+
+CONFORME A
+       POSIX.
+
+VER TAMBIÉN
+       sem_close (3), sem_destroy (3), sem_getvalue  (3),  sem_open  (3),  sem_post  (3),  sem_timedwait  (3),
+       sem_trywait (3), sem_unlink (3), sem_wait (3)
+
+Versión 1.0                 22 de Noviembre de 2006                sem_init(3)
+\end{verbatimtab}
+\end{tiny}
+
+\subsection{Open}
+
+\begin{tiny}
+\begin{verbatimtab}
+sem_close(3)               Minix programmer's manual              sem_close(3)
+
+NOMBRE
+       sem_open - inicializar y abrir un semáforo nombrado
+
+SINOPSIS
+       #include <semaphore.h>
+
+       sem_t *sem_open(const char *name, int oflag);
+
+       sem_t *sem_open(const char *name, int oflag, mode_t mode, unsigned int value);
+
+DESCRIPCION
+       La  función sem_open() crea un nuevo semáforo POSIX o abre uno existente. Este semáforo es identificado
+       por nombre.
+
+       El argumento oflag especifica los flags que controlan la operación  de  la  llamada.  Si  O_CREAT  está
+       especificado  en  oflag,  el  semáforo  es  creado si no existía previamente. Si O_CREAT y O_EXCL están
+       especificados en oflag, se devuelve un error si el semáforo con el nombre dado ya existe.
+
+       Si O_CREAT está definido en oflag, se deben proporcionar dos argumentos adicionales. El argumento  mode
+       especifica  los  permisos  asociados  al  nuevo semáforo, de la misma manera en que lo hace open(2). El
+       argumento value indica el valor inicial para el nuevo semáforo. Si se define O_CREAT y un semáforo  con
+       el nombre dado ya existe, los argumentos mode y value son ignorados.
+
+VALOR DE RETORNO
+       En  una  ejecución exitosa se devolverá la dirección del nuevo semáforo para facilitar la invocación de
+       las demás funciones con relación a semáforos. En caso de error se devolverá SEM_FAILED  y  la  variable
+       errno será actualizada para indicarlo.
+
+CONFORME A
+       POSIX.
+
+VER TAMBIÉN
+       sem_close  (3),  sem_destroy  (3),  sem_getvalue  (3),  sem_init  (3), sem_post (3), sem_timedwait (3),
+       sem_trywait (3), sem_unlink (3), sem_wait (3)
+
+Versión 1.0                 22 de Noviembre de 2006               sem_close(3)
+\end{verbatimtab}
+\end{tiny}
+
+\subsection{Post}
+
+\begin{tiny}
+\begin{verbatimtab}
+sem_post(3)                Minix programmer's manual               sem_post(3)
+
+NOMBRE
+       sem_post - desbloquear un semáforo
+
+SINOPSIS
+       #include <semaphore.h>
+
+       int sem_post(sem_t *sem);
+
+DESCRIPCION
+       La función sem_post() incrementa (desbloquea) el semáforo apuntado por sem. Si en consecuencia el valor
+       del semáforo se hace mayor que cero, otro proceso o hilo bloqueado en un sem_wait(3) será despertado  y
+       procederá a bloquear el semáforo.
+
+VALOR DE RETORNO
+       En  una  ejecución  exitosa se devolverá el valor cero. En caso de error no se alterará el semáforo, se
+       devolverá -1 y la variable errno será actualizada para indicarlo.
+
+CONFORME A
+       POSIX.
+
+VER TAMBIÉN
+       sem_close (3), sem_destroy (3), sem_getvalue  (3),  sem_init  (3),  sem_open  (3),  sem_timedwait  (3),
+       sem_trywait (3), sem_unlink (3), sem_wait (3)
+
+Versión 1.0                 22 de Noviembre de 2006                sem_post(3)
+\end{verbatimtab}
+\end{tiny}
+
+\subsection{Wait y Trywait}
+
+\begin{tiny}
+\begin{verbatimtab}
+sem_wait, sem_trywait(3)   Minix programmer's manual  sem_wait, sem_trywait(3)
+
+NOMBRE
+       sem_wait, sem_trywait - desbloquear un semáforo
+
+SINOPSIS
+       #include <semaphore.h>
+
+       int sem_trywait(sem_t *sem);
+
+       int sem_wait(sem_t *sem);
+
+DESCRIPCION
+       La  función  sem_trywait() desbloquea el semáforo referenciado por sem sólo si el mismo no está actual-
+       mente bloqueado. Si estuviera bloqueado no lo desbloquea.
+
+       sem_wait() bloqueará el semáforo referenciado por sem. Si el valor del mismo es cero, el hilo o proceso
+       que  invoque  la  función  no volverá de la función hasta que el semáforo sea desbloqueado. En tal caso
+       volverá a bloquearse pero pasará el control a esta función.
+
+VALOR DE RETORNO
+       Ambas funciones, en una ejecución exitosa devolverán el valor cero. En caso de error no se alterará  el
+       semáforo, se devolverá -1 y la variable errno será actualizada para indicarlo.
+
+CONFORME A
+       POSIX.
+
+VER TAMBIÉN
+       sem_close  (3), sem_destroy (3), sem_getvalue (3), sem_init (3), sem_open (3), sem_post (3), sem_timed-
+       wait (3), sem_unlink (3)
+
+Versión 1.0                 22 de Noviembre de 2006   sem_wait, sem_trywait(3)
+\end{verbatimtab}
+\end{tiny}
+
+\subsection{Unlink}
+
+\begin{tiny}
+\begin{verbatimtab}
+sem_unlink(3)              Minix programmer's manual             sem_unlink(3)
+
+NOMBRE
+       sem_unlink - remover un semáforo nombrado
+
+SINOPSIS
+       #include <semaphore.h>
+
+       int sem_unlink(const char *name);
+
+DESCRIPCION
+       La  función sem_unlink removerá el semáforo correspondiente al nombre name. Si el semáforo está actual-
+       mente referenciado por otro proceso, sem_unlink marcará el semáforo para posponer su destrucción  hasta
+       que  todas las referencias al mismo hayan sido destruidas (sem_close). Las llamadas a sem_open para re-
+       crear o re-conectarse al semáforo se referirán a un nuevo semáforo luego de que  sem_unlink  haya  sido
+       llamada.
+
+VALOR DE RETORNO
+       En  una ejecución exitosa se devolverá el valor cero. En caso de error el semáforo no se modificará, se
+       devolverá -1 y la variable errno será actualizada para indicarlo.
+
+CONFORME A
+       POSIX.
+
+VER TAMBIÉN
+       sem_close (3), sem_destroy (3), sem_getvalue (3), sem_init (3), sem_open (3), sem_post (3),  sem_timed-
+       wait (3), sem_trywait (3), sem_wait (3)
+
+Versión 1.0                 22 de Noviembre de 2006              sem_unlink(3)
+\end{verbatimtab}
+\end{tiny}
+
 
 \begin{thebibliography}{99}
 \bibitem{Referencia1}``Sistemas Operativos: Diseño e implementación, Segunda Edición'', Tanenbaum \& Woodhull, Ed. Pearson, 1998, New Jersey.
 \bibitem{Referencia2}http://www.opengroup.org/onlinepubs/000095399/
 basedefs/semaphore.h.html
 \bibitem{Referencia3}http://www.midnightsoret.com.ar/personales/
-alejandrovaldez/minix/minixSystemCall.html
+alejandrovaldez/minix/SystemCall.html
 \end{thebibliography}
 
 \newpage

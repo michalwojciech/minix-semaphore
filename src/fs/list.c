@@ -11,7 +11,7 @@
 #include "list.h"
 
 /* Cantidad maxima de elementos para utilizar en la suma de todas las listas */
-#define MAX_ELEMS (MAX_LISTS * MAX_NODES)
+#define MAX_ELEMS MAX_NODES
 
 #define Precondition(x) assert(x)
 
@@ -58,7 +58,7 @@ typedef struct
 } listSlot;
 
 elementSlot elements[MAX_ELEMS];
-nodeSlot nodes[MAX_ELEMS];
+nodeSlot nodes[MAX_NODES];
 listSlot lists[MAX_LISTS];
 
 /* Funciones de liberacion */
@@ -104,7 +104,6 @@ free_list(struct listCDT *list)
 
 static int ListFindNode(listADT, nodeCDT *, listElementT, nodeCDT **);
 
-#define DEBUG 0
 
 /* Implementacion de funciones publicas */
 

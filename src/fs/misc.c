@@ -199,6 +199,7 @@ PUBLIC int do_fork()
   /* Record the fact that both root and working dir have another user. */
   dup_inode(cp->fp_rootdir);
   dup_inode(cp->fp_workdir);
+  sem_open_all(parent, child);
   return(OK);
 }
 
@@ -220,6 +221,9 @@ PUBLIC int do_exec()
 
   /* The array of FD_CLOEXEC bits is in the fp_cloexec bit map. */
   fp = &fproc[slot1];		/* get_filp() needs 'fp' */
+
+  sem_close_all(slot1);
+
   bitmap = fp->fp_cloexec;
   if (bitmap == 0) return(OK);	/* normal case, no FD_CLOEXECs */
 
@@ -274,6 +278,8 @@ PUBLIC int do_exit()
   put_inode(fp->fp_workdir);
   fp->fp_rootdir = NIL_INODE;
   fp->fp_workdir = NIL_INODE;
+
+  sem_close_all(exitee);
 
   /* If a session leader exits then revoke access to its controlling tty from
    * all other processes using it.
