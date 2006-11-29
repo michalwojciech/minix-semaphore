@@ -200,7 +200,7 @@ aceptar_pedido(connectionADT conn, int proc)
 			if ( rta_ref == NULL )
 			{
 				printf("Error en el open %s\n", strerror(errno));
-				return ERROR;
+				rta = -1;
 			}
 			else
 				rta = *rta_ref;
@@ -278,6 +278,7 @@ aceptar_pedido(connectionADT conn, int proc)
 	if ( dont_reply == FALSE )
 	{	
 		put_long(rta);
+		put_long(errno);
 		if (connection_send(conn, get_buffer(), get_buffer_size()) < 0)
 		{
 			printf("No se puede escribir\n");
