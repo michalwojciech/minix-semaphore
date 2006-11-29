@@ -68,8 +68,6 @@ producer(void)
 {
 	int item;
 	int items = ITEMS;
-//	s_empty = sem_open("/empty",  O_CREAT, 0, ITEMS);
-//	s_full = sem_open("/full",  O_CREAT, 0, 0);
 
 	/* Ciclo para escritura de cada elemento */
 	while (items--)
@@ -87,8 +85,6 @@ producer(void)
 		sem_post(&s_full);
 	}
 	
-//	sem_close(s_empty);
-//	sem_close(s_full);
 	printf("PRODUCTOR: Me muero\n");
 }
 
@@ -100,9 +96,6 @@ consumer(void)
 	int item;
 	int items = ITEMS;
 	
-//	s_empty = sem_open("/empty",  O_CREAT, 0, ITEMS);
-//	s_full = sem_open("/full",  O_CREAT, 0, 0);
-
 	/* Ciclo para lectura de cada elemento */
 	while (items--)
 	{
@@ -118,11 +111,6 @@ consumer(void)
 		sem_post(&s_empty);
 	}
 	
-//	sem_unlink("/empty");
-//	sem_unlink("/full");
-	
-//	sem_close(s_empty);
-//	sem_close(s_full);
 	printf("CONSUMIDOR: Me muero\n");
 }
 
