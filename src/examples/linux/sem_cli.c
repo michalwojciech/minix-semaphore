@@ -6,6 +6,8 @@
 #include "protocolo_sem.h"
 #include <stdarg.h>
 #include <fcntl.h>
+#include <errno.h>
+
 connectionADT conn;
 
 
@@ -21,6 +23,7 @@ void clean_all(void)
 	}
 	connection_destroy(&conn);
 }
+
 sem_t * 
 sem_open(const char *nombre, int oflags, ...)
 {
@@ -75,11 +78,22 @@ sem_open(const char *nombre, int oflags, ...)
 	rta = malloc(sizeof(int));
 //	*rta = buf[0];
 	*rta = (sem_t) get_long();
+	if ( *rta == -1 )
+	{
+		free (rta);
+		rta = SEM_FAILED;
+	}
+	errno = get_long();
 	return rta;
 }
 int sem_post(sem_t * handle)
 {
 	int cc;
+	if ( handle == NULL )
+	{
+		errno = EINVAL;
+		return -1;
+	}
 	clear_buffer();
 	put_char(POST);
 	put_long(*handle);
@@ -97,12 +111,19 @@ int sem_post(sem_t * handle)
 		printf("No se puede leer\n");
 		return;
 	}
-	return (int) get_long();
+	int rta = get_long();
+	errno = get_long();
+	return rta;
 
 }
 int sem_wait(sem_t * handle)
 {
 	int cc;
+	if ( handle == NULL )
+	{
+		errno = EINVAL;
+		return -1;
+	}
 	clear_buffer();
 	put_char(WAIT);
 	put_long(*handle);
@@ -120,13 +141,20 @@ int sem_wait(sem_t * handle)
 		printf("No se puede leer\n");
 		return;
 	}
-	return get_long();
+	int rta = get_long();
+	errno = get_long();
+	return rta;
 }
 
 int
 sem_close(sem_t * handle)
 {
 	int cc;
+	if ( handle == NULL )
+	{
+		errno = EINVAL;
+		return -1;
+	}
 	clear_buffer();
 	put_char(CLOSE);
 	put_long(*handle);
@@ -144,13 +172,20 @@ sem_close(sem_t * handle)
 		printf("No se puede leer\n");
 		return;
 	}
-	return get_long();
+	int rta = get_long();
+	errno = get_long();
+	return rta;
 }		
 
 int    
 sem_trywait(sem_t * handle)
 {
 	int cc;
+	if ( handle == NULL )
+	{
+		errno = EINVAL;
+		return -1;
+	}
 	clear_buffer();
 	put_char(TRYWAIT);
 	put_long(*handle);
@@ -168,7 +203,9 @@ sem_trywait(sem_t * handle)
 		printf("No se puede leer\n");
 		return;
 	}
-	return get_long();
+	int rta = get_long();
+	errno = get_long();
+	return rta;
 }
 
 int
@@ -192,7 +229,9 @@ sem_unlink(const char * name)
 		printf("No se puede leer\n");
 		return;
 	}
-	return get_long();
+	int rta = get_long();
+	errno = get_long();
+	return rta;
 }
 
 int
@@ -231,13 +270,20 @@ sem_init (sem_t *sem, int pshared, unsigned value)
 		return;
 	}
 	*sem = (sem_t) get_long();
-	return get_long();
+	int rta = get_long();
+	errno = get_long();
+	return rta;
 }
 
 int    
 sem_destroy(sem_t * handle)
 {
 	int cc;
+	if ( handle == NULL )
+	{
+		errno = EINVAL;
+		return -1;
+	}
 	clear_buffer();
 	put_char(DESTROY);
 	put_long(*handle);
@@ -255,13 +301,20 @@ sem_destroy(sem_t * handle)
 		printf("No se puede leer\n");
 		return -1;
 	}
-	return get_long();
+	int rta = get_long();
+	errno = get_long();
+	return rta;
 }
 
 int    
 sem_getvalue(sem_t * handle, int * value)
 {
 	int cc;
+	if ( handle == NULL )
+	{
+		errno = EINVAL;
+		return -1;
+	}
 	clear_buffer();
 	put_char(GETVALUE);
 	put_long(*handle);
@@ -280,5 +333,7 @@ sem_getvalue(sem_t * handle, int * value)
 		return;
 	}
 	*value =  get_long();
-	return get_long();
+	int rta = get_long();
+	errno = get_long();
+	return rta;
 }

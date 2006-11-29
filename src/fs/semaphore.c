@@ -374,6 +374,11 @@ sem_post(sem_t * handle)
 		/* Si el semaforo es negativo tengo que despertar a alguien. */
 		if (sem_array[sem_fd].sem_count < 0 )
 		{
+#ifdef DEBUG
+			/* Si no hay elementos en la lista se corrompio el semaforo */
+			if ( ListIsEmpty(sem_array[sem_fd].blocked_list) )
+				printf("POST: Semaforo corrupto \n");
+#endif	
 			ListToBegin(sem_array[sem_fd].blocked_list);
 			ListGetElement(sem_array[sem_fd].blocked_list, &proc);
 			ListRemoveFirst(sem_array[sem_fd].blocked_list);
