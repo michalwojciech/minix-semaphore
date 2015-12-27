@@ -1,0 +1,1 @@
+This proyects implements the POSIX standard for semaphores, allowing Minix to use all the benefits of this particular IPC.
